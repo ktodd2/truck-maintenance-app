@@ -1,0 +1,18 @@
+{
+  "name": "Fleet Maintenance Tracker",
+  "short_name": "Fleet Tracker",
+  "description": "Track truck maintenance, costs, and service history",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/truck-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
