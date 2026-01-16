@@ -1,14 +1,16 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTrucks } from '../hooks/useTrucks'
 import { useMaintenance } from '../hooks/useMaintenance'
-import { exportToCSV, formatCurrency, formatNumber } from '../utils/csvExport'
-import { db } from '../db/database'
-import { Download, Trash2, AlertTriangle, Database, Truck, FileText, Info } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { exportToCSV, formatCurrency } from '../utils/csvExport'
+import { Download, LogOut, Database, Truck, FileText, Info, User } from 'lucide-react'
 
 export default function Settings() {
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
   const { trucks } = useTrucks()
   const { records } = useMaintenance()
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [exportStatus, setExportStatus] = useState('')
 
   const handleExportAll = () => {
@@ -18,11 +20,9 @@ export default function Settings() {
     setTimeout(() => setExportStatus(''), 3000)
   }
 
-  const handleClearAllData = async () => {
-    await db.trucks.clear()
-    await db.maintenanceRecords.clear()
-    await db.serviceReminders.clear()
-    setShowDeleteConfirm(false)
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/login')
   }
 
   const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0)
@@ -31,8 +31,29 @@ export default function Settings() {
     <div className="p-4 space-y-6 pb-8">
       <header className="pt-2">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500 text-sm">Manage your data and preferences</p>
+        <p className="text-gray-500 text-sm">Manage your account and data</p>
       </header>
+
+      {/* Account */}
+      <section className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-2 mb-4">
+          <User size={18} className="text-blue-500" />
+          <h2 className="font-semibold text-gray-900">Account</h2>
+        </div>
+
+        <div className="flex items-center justify-between py-2 border-b border-gray-100 mb-4">
+          <span className="text-gray-600">Email</span>
+          <span className="font-medium text-gray-900 text-sm">{user?.email}</span>
+        </div>
+
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition"
+        >
+          <LogOut size={18} />
+          Sign Out
+        </button>
+      </section>
 
       {/* Data Summary */}
       <section className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
@@ -104,54 +125,9 @@ export default function Settings() {
           <p><strong>Fleet Maintenance Tracker</strong></p>
           <p>A mobile-first app for tracking truck maintenance, costs, and service history.</p>
           <p className="text-xs text-gray-400 mt-2">
-            Data is stored locally on your device. For cloud sync and multi-device access, upgrade to the cloud version.
+            Your data syncs across all your devices automatically.
           </p>
         </div>
-      </section>
-
-      {/* Danger Zone */}
-      <section className="bg-white rounded-xl p-4 shadow-sm border border-red-200">
-        <div className="flex items-center gap-2 mb-3">
-          <AlertTriangle size={18} className="text-red-500" />
-          <h2 className="font-semibold text-red-600">Danger Zone</h2>
-        </div>
-
-        {!showDeleteConfirm ? (
-          <>
-            <p className="text-sm text-gray-500 mb-4">
-              Permanently delete all data. This action cannot be undone.
-            </p>
-
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="w-full flex items-center justify-center gap-2 border border-red-300 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition"
-            >
-              <Trash2 size={18} />
-              Clear All Data
-            </button>
-          </>
-        ) : (
-          <div className="bg-red-50 rounded-lg p-4">
-            <p className="font-medium text-red-800 mb-2">Are you sure?</p>
-            <p className="text-sm text-red-600 mb-4">
-              This will permanently delete {trucks.length} truck{trucks.length !== 1 ? 's' : ''} and {records.length} maintenance record{records.length !== 1 ? 's' : ''}.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={handleClearAllData}
-                className="flex-1 bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition"
-              >
-                Yes, Delete Everything
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 bg-white text-gray-700 py-2 rounded-lg font-medium border border-gray-200 hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
       </section>
     </div>
   )
